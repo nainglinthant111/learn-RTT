@@ -11,9 +11,9 @@ import {
 import { Link } from "react-router-dom";
 function Error() {
   return (
-    <>
+    <div className="flex min-h-screen flex-col justify-between space-y-8">
       <Header />
-      <main className="container mx-auto flex h-[calc(100vh-64px)] items-center justify-center">
+      <main className="container mx-auto flex h-full items-center justify-center">
         <Card className="w-[350px] md:w-[500px]">
           <CardHeader>
             <CardTitle className="text-center">Oops!</CardTitle>
@@ -29,7 +29,7 @@ function Error() {
         </Card>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
 

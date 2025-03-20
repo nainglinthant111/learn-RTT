@@ -16,13 +16,24 @@ import { Link } from "react-router-dom";
 import { Icons } from "@/components/icons";
 import { siteConfig } from "@/config/site";
 import { Button } from "@/components/ui/button";
-// import { use, useState } from "react";
+import { useState, useEffect } from "react";
 
 interface MainNavProps {
   items: MainNavItem[];
 }
 function MobileNavigation({ items }: MainNavProps) {
-  //    const [isDesktop, setIsDesktop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const query = window.matchMedia("(min-width: 1024px)");
+  function onChange(e: MediaQueryListEvent) {
+    setIsDesktop(e.matches);
+  }
+  useEffect(() => {
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, [query]);
+  if (isDesktop) {
+    return null;
+  }
 
   return (
     <div className="lg:hidden">

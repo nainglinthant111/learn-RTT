@@ -5,7 +5,7 @@ import NewsSelectorForm from "../new-letter";
 
 function Footer() {
   return (
-    <footer className="ml-4 w-full border-t lg:ml-0">
+    <footer className="ml-4 w-full border-t lg:ml-0 lg:px-2">
       <div className="lg-px-16 container mx-auto items-center pt-6 pb-8 lg:px-15">
         <section className="flex flex-col gap-10 lg:flex-row lg:justify-between lg:gap-20">
           <section className="">
