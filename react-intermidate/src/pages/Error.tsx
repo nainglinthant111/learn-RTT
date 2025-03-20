@@ -1,3 +1,4 @@
+import Footer from "@/components/layouts/Footer";
 import Header from "@/components/layouts/Header";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ function Error() {
           </CardFooter>
         </Card>
       </main>
+      <Footer />
     </>
   );
 }
