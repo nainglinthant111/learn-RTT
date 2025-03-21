@@ -8,6 +8,7 @@ function RootLayout() {
       <main className="mt-16 flex-1">
         <Outlet />
       </main>
+      <hr />
       <Footer />
     </div>
   );

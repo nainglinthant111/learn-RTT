@@ -34,6 +34,7 @@ function Error() {
           </CardFooter>
         </Card>
       </main>
+      <hr />
       <Footer />
     </div>
   );
