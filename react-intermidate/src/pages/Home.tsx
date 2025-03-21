@@ -1,7 +1,27 @@
+import CarouselCard from "@/components/Products/CarouselCard";
 import { Button } from "@/components/ui/button";
 import Cosh from "@/data/images/couch.png";
+import { products } from "@/data/products";
 import { Link } from "react-router-dom";
+
 function Home() {
+  const Title = ({
+    title,
+    href,
+    sideTexts,
+  }: {
+    title: string;
+    href: string;
+    sideTexts: string;
+  }) => (
+    <div className="mt-28 mb-10 ml-8 flex flex-col md:justify-between lg:ml-0 lg:flex-row">
+      <h2 className="mb-4 text-2xl font-bold md:mb-0">{title}</h2>
+      <Link to={href} className="text-muted-foreground font-semibold underline">
+        {sideTexts}
+      </Link>
+    </div>
+  );
+
   return (
     <div className="container mx-auto w-full lg:px-16">
       <div className="flex flex-col lg:flex-row lg:justify-between">
@@ -31,6 +51,13 @@ function Home() {
         </div>
         <img src={Cosh} alt="cosh" className="w-full lg:w-3/5" />
       </div>
+      <CarouselCard
+        products={products.map((product) => ({
+          ...product,
+          id: Number(product.id),
+        }))}
+      />
+      <Title title="Recent Blog" href="/blogs" sideTexts="View All Post" />
     </div>
   );
 }
