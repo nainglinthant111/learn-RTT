@@ -1,10 +1,12 @@
+import BlogCard from "@/components/blog/BlogCard";
 import CarouselCard from "@/components/Products/CarouselCard";
 import { Button } from "@/components/ui/button";
 import Cosh from "@/data/images/couch.png";
+import { posts } from "@/data/posts";
 import { products } from "@/data/products";
 import { Link } from "react-router-dom";
-
 function Home() {
+  const samplePost = posts.slice(0, 3);
   const Title = ({
     title,
     href,
@@ -57,7 +59,13 @@ function Home() {
           id: Number(product.id),
         }))}
       />
-      <Title title="Recent Blog" href="/blogs" sideTexts="View All Post" />
+      <Title title="Recent Blog" href="/blogs" sideTexts="View All Posts" />
+      <BlogCard
+        posts={samplePost.map((post) => ({
+          ...post,
+          id: Number(post.id),
+        }))}
+      />
     </div>
   );
 }

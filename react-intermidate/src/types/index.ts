@@ -25,9 +25,7 @@ export type Product = {
 };
 export type Post = {
   id: number;
-  author: {
-    fullName: string;
-  };
+  author: string;
   title: string;
   content: string;
   image: string;
