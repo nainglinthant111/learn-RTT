@@ -3,6 +3,7 @@ import {
   HamburgerMenuIcon,
   PaperPlaneIcon,
   ExclamationTriangleIcon,
+  ArrowLeftIcon,
 } from "@radix-ui/react-icons";
 export type IconProps = React.HtmlHTMLAttributes<SVGElement>;
 
@@ -27,4 +28,5 @@ export const Icons = {
   menu: HamburgerMenuIcon,
   paperPlane: PaperPlaneIcon,
   warning: ExclamationTriangleIcon,
+  arrowLeft: ArrowLeftIcon,
 };

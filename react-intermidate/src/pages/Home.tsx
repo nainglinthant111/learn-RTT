@@ -63,7 +63,7 @@ function Home() {
       <BlogCard
         posts={samplePost.map((post) => ({
           ...post,
-          id: Number(post.id),
+          id: String(post.id),
         }))}
       />
     </div>
