@@ -7,7 +7,7 @@ function BlogDetail() {
   const { postid } = useParams();
   const post = posts.find((post) => post.id === postid);
   return (
-    <div className="container mx-auto lg:px-16">
+    <div className="container mx-auto px-4 lg:px-16">
       <section className="flex flex-col lg:flex-row">
         <section className="w-full lg:w-3/4 lg:pr-4">
           <Button variant={"outline"} asChild className="mt-8 mb-6">
@@ -43,7 +43,33 @@ function BlogDetail() {
             </p>
           )}
         </section>
-        <section className="lg:1/4 w-full lg:mt-24"></section>
+        <section className="w-full lg:mt-24 lg:w-1/4">
+          <div className="mb-8 flex items-center gap-2 text-base font-semibold">
+            <Icons.layersIcon className="mr-2 h-4 w-4" />
+            <h3 className="">Other Blog Posts</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1">
+            {posts
+              .filter((post) => post.id !== postid)
+              .map((post) => (
+                <Link
+                  key={post.id}
+                  to={`/blogs/${post.id}`}
+                  className="mb-6 flex items-start gap-2"
+                >
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    className="w-1/4 rounded"
+                  />
+                  <div className="text-muted-foreground w-3/4 text-sm font-[500]">
+                    <p className="line-clamp-2">{post.content}</p>
+                    <i className="">... see more</i>
+                  </div>
+                </Link>
+              ))}
+          </div>
+        </section>
       </section>
     </div>
   );
