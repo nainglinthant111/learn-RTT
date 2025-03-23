@@ -33,3 +33,7 @@ export type Post = {
   updatedAt: string;
   tags: string[];
 };
+export type Category = {
+  id: string;
+  label: string;
+};

@@ -1,5 +1,11 @@
+import { Outlet } from "react-router-dom";
+
 function ProductRootLayout() {
-  return <div>ProductRootLayout</div>;
+  return (
+    <>
+      <Outlet />
+    </>
+  );
 }
 
 export default ProductRootLayout;
