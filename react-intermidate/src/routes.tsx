@@ -15,6 +15,7 @@ import ProductRootLayout from "@/pages/Products/ProductRootLayout";
 import Product from "@/pages/Products/Product";
 import ProductDetail from "@/pages/Products/ProductDetail";
 
+// eslint-disable-next-line react-refresh/only-export-components
 const SuspenseFallback = () => <div>Loading...</div>;
 export const router = createBrowserRouter([
   {

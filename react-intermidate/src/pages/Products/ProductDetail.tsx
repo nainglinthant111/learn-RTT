@@ -5,6 +5,12 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import ProductCard from "@/components/Products/ProductCard";
 import { Icons } from "@/components/icons";
 import Autoplay from "embla-carousel-autoplay";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 import {
   Carousel,
@@ -16,6 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { formatPrice } from "@/lib/utils";
 import Rating from "@/components/Products/Rating";
 import AddToFavouite from "@/components/Products/AddToFavouite";
+import AddToCart from "@/components/Products/AddToCart";
 
 function ProductDetail() {
   const { productId } = useParams();
@@ -66,6 +73,17 @@ function ProductDetail() {
               rating={Number(product?.rating)}
             />
           </div>
+          <AddToCart canBuy={product?.status === "active" ? true : false} />
+          <Separator className="my-5" />
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="item-1" className="border-none">
+              <AccordionTrigger>Description</AccordionTrigger>
+              <AccordionContent>
+                {product?.description ??
+                  "No Description is avalible for this product"}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </section>
       <section className="space-y-6 overflow-hidden">

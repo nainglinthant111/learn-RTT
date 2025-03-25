@@ -58,7 +58,7 @@ export default function NewsSelectorForm() {
               </FormControl>
               <Button
                 size="icon"
-                className="z-index-20 absolute top-[4px] right-2 right-[3.5px] size-7"
+                className="z-index-20 absolute top-[4px] right-2 size-7"
               >
                 {loding ? (
                   <Loader2 className="animate-spin" aria-hidden="true" />

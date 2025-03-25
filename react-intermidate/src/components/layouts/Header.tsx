@@ -3,6 +3,8 @@ import { siteConfig } from "@/config/site";
 import { NavItemWithChildren } from "@/types";
 import MobileNavigation from "@/components/layouts/MobileNavigation";
 import { ModeToggle } from "../mode-toggle";
+import AuthDropDown from "./AuthDropDown";
+import { User } from "@/data/user";
 
 function Header() {
   return (
@@ -16,6 +18,7 @@ function Header() {
         />
         <div className="mr-8 flex flex-1 items-center justify-end space-x-4 lg:mr-0">
           <ModeToggle />
+          <AuthDropDown user={User} />
         </div>
       </nav>
     </header>
