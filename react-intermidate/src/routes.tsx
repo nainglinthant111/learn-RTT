@@ -14,6 +14,8 @@ const BlogRootLayout = lazy(() => import("@/pages/Blogs/BlogRootLayout"));
 import ProductRootLayout from "@/pages/Products/ProductRootLayout";
 import Product from "@/pages/Products/Product";
 import ProductDetail from "@/pages/Products/ProductDetail";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 
 // eslint-disable-next-line react-refresh/only-export-components
 const SuspenseFallback = () => <div>Loading...</div>;
@@ -72,5 +74,13 @@ export const router = createBrowserRouter([
         ],
       },
     ],
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/register",
+    element: <Register />,
   },
 ]);

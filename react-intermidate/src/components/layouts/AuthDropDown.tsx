@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Icons } from "../icons";
 
 interface userProps {
   user: User;
@@ -50,24 +51,22 @@ function AuthDropDown({ user }: userProps) {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem>
-            Profile
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+            <Icons.dashboard className="mr-2 size-4" aria-hidden="true" />
+            Dashboard
+            <DropdownMenuShortcut>⇧⌘D</DropdownMenuShortcut>
           </DropdownMenuItem>
+
           <DropdownMenuItem>
-            Billing
-            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Team
-            <DropdownMenuShortcut>⌘T</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Subscription
-            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+            <Icons.gear className="mr-2 size-4" aria-hidden="true" />
+            Settings
+            <DropdownMenuShortcut>⇧⌘S</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem>
-            logout
+            <Link to="/login" className="flex">
+              <Icons.exit className="mr-4 size-4" aria-hidden="true" />
+              Logout
+            </Link>
             <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuGroup>

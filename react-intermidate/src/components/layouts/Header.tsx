@@ -5,6 +5,7 @@ import MobileNavigation from "@/components/layouts/MobileNavigation";
 import { ModeToggle } from "../mode-toggle";
 import AuthDropDown from "./AuthDropDown";
 import { User } from "@/data/user";
+import ShoppingCartSheet from "@/components/layouts/ShoppingCartSheet";
 
 function Header() {
   return (
@@ -17,6 +18,7 @@ function Header() {
           items={siteConfig.mainNav as unknown as NavItemWithChildren[]}
         />
         <div className="mr-8 flex flex-1 items-center justify-end space-x-4 lg:mr-0">
+          <ShoppingCartSheet />
           <ModeToggle />
           <AuthDropDown user={User} />
         </div>
