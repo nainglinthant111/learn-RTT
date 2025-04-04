@@ -2,9 +2,12 @@
     "name": "furniture-backend",
     "version": "1.0.0",
     "description": "full stack furniture store backend",
-    "main": "index.js",
+    "main": "dist/index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "jest",
+        "dev": "nodemon src/index.ts",
+        "build": "tsc -p .",
+        "start": "node dist/index.js"
     },
     "keywords": [],
     "author": "Naing Lin Thant",
