@@ -5,12 +5,10 @@ import cors from "cors";
 import morgan from "morgan";
 
 import { limiter } from "./middlewares/rateLimiter";
-import { check } from "./middlewares/check";
+import healthRoute from "./routes/v1/health";
+import authRoute from "./routes/v1/auth";
 
 export const app = express();
-interface CustomRequeat extends Request {
-    userId?: number;
-}
 
 app.use(morgan("dev")) // morgan use log for req,res time
     .use(express.urlencoded({ extended: true })) // for request data
@@ -18,16 +16,10 @@ app.use(morgan("dev")) // morgan use log for req,res time
     .use(cors()) // for cross origin resource sharing
     .use(helmet()) // for security
     .use(compression()) //decrease response size
-    .use(limiter);
+    .use(limiter)
+    .use("/api/v1", healthRoute);
 
-// http://localhost:8080/health
-app.get("/health", check, (req: CustomRequeat, res: Response) => {
-    throw new Error("An error occurs!");
-    res.status(200).json({
-        message: "Request is Ok!",
-        userId: req.userId,
-    });
-});
+app.use("/api/v1", authRoute);
 
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {
     const status = error.status || 500;
