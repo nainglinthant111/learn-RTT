@@ -353,6 +353,7 @@ export const login = [
         .matches(/^[0-9]+$/)
         .isLength({ min: 8, max: 8 }),
     async (req: Request, res: Response, next: NextFunction) => {
+        // Validate request body and handle validation errors
         const errors = validationResult(req).array({ onlyFirstError: true });
         if (errors.length > 0) {
             const error: any = new Error(errors[0].msg);
@@ -360,14 +361,19 @@ export const login = [
             error.code = "ERROR_INVALID";
             return next(error);
         }
+
+        // Format phone number by removing '09' prefix if present
         let phone = req.body.phone;
         const password = req.body.password;
         if (phone.slice(0, 2) === "09") {
             phone = phone.substring(2, phone.length);
         }
+
+        // Check if user exists in database
         const user = await getUserByPhone(phone);
         checkUserNotExit(user);
 
+        // Check if user account is frozen
         if (user?.status === "FREEZE") {
             const error: any = new Error(
                 "Your Account is temporarily locked. Please contact us."
@@ -376,24 +382,32 @@ export const login = [
             error.code = "ERROR_FREEZED";
             return next(error);
         }
+
+        // Verify password matches stored hash
         const isMatchPassword = await bcrypt.compare(password, user!.password);
         if (!isMatchPassword) {
+            // Check if this is the first failed attempt today
             const lastRequestDate = new Date(
                 user!.updatedAt
             ).toLocaleDateString();
             const isSameDate =
                 lastRequestDate === new Date().toLocaleDateString();
+
             if (!isSameDate) {
+                // Reset error count for new day
                 const userData = {
                     errorLoginCount: 1,
                 };
             } else {
+                // Check if user has exceeded maximum failed attempts
                 if (user!.errorLoginCount >= 2) {
+                    // Freeze account after 3 failed attempts
                     const userData = {
                         status: "FREEZE",
                     };
                     await updateUser(user!.id, userData);
                 } else {
+                    // Increment failed attempt counter
                     const userData = {
                         errorLoginCount: {
                             increment: 1,
@@ -407,7 +421,8 @@ export const login = [
             error.code = "ERROR_INVALID";
             return next(error);
         }
-        // Generate JWT tokens
+
+        // Generate JWT tokens for successful login
         const accessPayload = {
             id: user!.id,
         };
@@ -415,6 +430,7 @@ export const login = [
             id: user!.id,
             phone: user!.phone,
         };
+
         // Sign JWT tokens with expiration times
         const accessToken = jwt.sign(
             accessPayload,
@@ -427,12 +443,13 @@ export const login = [
             { expiresIn: 60 * 15 } // 15 minutes
         );
 
-        // Update user with refresh token
+        // Reset error count and update refresh token
         const userUpdateData = {
             errorLoginCount: 0,
             randonToken: refreshToken,
         };
         await updateUser(user!.id, userUpdateData);
+
         // Set secure HTTP-only cookies and send success response
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
