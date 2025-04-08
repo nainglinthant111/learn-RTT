@@ -8,6 +8,14 @@ export const checkUserExit = (user: any) => {
         throw error;
     }
 };
+export const checkUserNotExit = (user: any) => {
+    if (!user) {
+        const error: any = new Error("Invalid User");
+        error.status = 401;
+        error.code = "ERROR_Unauthorized";
+        throw error;
+    }
+};
 
 export const checkOtpErrorIfSameDate = (
     isSamedate: boolean,

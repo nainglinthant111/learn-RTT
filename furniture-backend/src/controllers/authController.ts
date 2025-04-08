@@ -14,6 +14,7 @@ import {
     checkOtpErrorIfSameDate,
     checkOtpRow,
     checkUserExit,
+    checkUserNotExit,
 } from "../utils/auth";
 import { generateOtp, generateToken } from "../utils/generate";
 import bcrypt from "bcrypt";
@@ -334,15 +335,121 @@ export const confirmPassword = [
             .status(201)
             .json({
                 message: "Successfully created an account.",
-                userId: newUser.id,
             });
     },
 ];
 
-export const login = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
-    res.status(200).json({ message: "login" });
-};
+export const login = [
+    // Input validation for phone number
+    body("phone", "Invalid Phone Number")
+        .trim()
+        .notEmpty()
+        .matches(/^[0-9]+$/)
+        .isLength({ min: 5, max: 12 }),
+    // Input validation for password (8 digits)
+    body("password", "Password must be 8 digits")
+        .trim()
+        .notEmpty()
+        .matches(/^[0-9]+$/)
+        .isLength({ min: 8, max: 8 }),
+    async (req: Request, res: Response, next: NextFunction) => {
+        const errors = validationResult(req).array({ onlyFirstError: true });
+        if (errors.length > 0) {
+            const error: any = new Error(errors[0].msg);
+            error.status = 400;
+            error.code = "ERROR_INVALID";
+            return next(error);
+        }
+        let phone = req.body.phone;
+        const password = req.body.password;
+        if (phone.slice(0, 2) === "09") {
+            phone = phone.substring(2, phone.length);
+        }
+        const user = await getUserByPhone(phone);
+        checkUserNotExit(user);
+
+        if (user?.status === "FREEZE") {
+            const error: any = new Error(
+                "Your Account is temporarily locked. Please contact us."
+            );
+            error.status = 401;
+            error.code = "ERROR_FREEZED";
+            return next(error);
+        }
+        const isMatchPassword = await bcrypt.compare(password, user!.password);
+        if (!isMatchPassword) {
+            const lastRequestDate = new Date(
+                user!.updatedAt
+            ).toLocaleDateString();
+            const isSameDate =
+                lastRequestDate === new Date().toLocaleDateString();
+            if (!isSameDate) {
+                const userData = {
+                    errorLoginCount: 1,
+                };
+            } else {
+                if (user!.errorLoginCount >= 2) {
+                    const userData = {
+                        status: "FREEZE",
+                    };
+                    await updateUser(user!.id, userData);
+                } else {
+                    const userData = {
+                        errorLoginCount: {
+                            increment: 1,
+                        },
+                    };
+                    await updateUser(user!.id, userData);
+                }
+            }
+            const error: any = new Error("Password is worng.");
+            error.status = 401;
+            error.code = "ERROR_INVALID";
+            return next(error);
+        }
+        // Generate JWT tokens
+        const accessPayload = {
+            id: user!.id,
+        };
+        const refleshPayload = {
+            id: user!.id,
+            phone: user!.phone,
+        };
+        // Sign JWT tokens with expiration times
+        const accessToken = jwt.sign(
+            accessPayload,
+            process.env.ACCESS_TOKEN_SECRET!,
+            { expiresIn: 60 * 15 } // 15 minutes
+        );
+        const refreshToken = jwt.sign(
+            refleshPayload,
+            process.env.REFRESH_TOKEN_SECRET!,
+            { expiresIn: 60 * 15 } // 15 minutes
+        );
+
+        // Update user with refresh token
+        const userUpdateData = {
+            errorLoginCount: 0,
+            randonToken: refreshToken,
+        };
+        await updateUser(user!.id, userUpdateData);
+        // Set secure HTTP-only cookies and send success response
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+            maxAge: 1000 * 60 * 15, // 15 minutes
+        })
+            .cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite:
+                    process.env.NODE_ENV === "production" ? "none" : "strict",
+                maxAge: 1000 * 60 * 60 * 24 * 30, // 1 month
+            })
+            .status(200)
+            .json({
+                message: "Successfully login.",
+            });
+    },
+];
