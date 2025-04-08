@@ -22,3 +22,12 @@ export const checkOtpErrorIfSameDate = (
         throw error;
     }
 };
+
+export const checkOtpRow = (otpRow: any) => {
+    if (!otpRow) {
+        const error: any = new Error("Phone Number is incorrect");
+        error.status = 400;
+        error.code = "ERROR_INVALID";
+        throw error;
+    }
+};
