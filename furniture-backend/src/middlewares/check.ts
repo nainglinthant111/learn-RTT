@@ -11,6 +11,5 @@ export const check = (
     // err.status = 401;
     // err.code = "Token_Expired";
     // return next(err);
-    req.userId = 12345;
     next();
 };

@@ -24,3 +24,7 @@ export const createUser = async (userData: any) => {
 export const updateUser = async (id: number, userdata: any) => {
     return prisma.user.update({ where: { id }, data: userdata });
 };
+
+export const getUserById = async (id: number) => {
+    return prisma.user.findUnique({ where: { id } });
+};

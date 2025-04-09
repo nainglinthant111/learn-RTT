@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { body, validationResult } from "express-validator";
+import { body, check, validationResult } from "express-validator";
 import moment from "moment";
 import jwt from "jsonwebtoken";
 import {
@@ -9,6 +9,7 @@ import {
     updateOtp,
     createUser,
     updateUser,
+    getUserById,
 } from "../services/authService";
 import {
     checkOtpErrorIfSameDate,
@@ -470,3 +471,53 @@ export const login = [
             });
     },
 ];
+
+export const logout = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const refreshToken = req.cookies ? req.cookies.refreshToken : null;
+
+    if (!refreshToken) {
+        const error: any = new Error("You are not authenticated user.");
+        error.status = 401;
+        error.code = "Token_Unauthenticated";
+        return next(error);
+    }
+
+    let decoded;
+    try {
+        decoded = jwt.verify(
+            refreshToken,
+            process.env.REFRESH_TOKEN_SECRET!
+        ) as {
+            id: number;
+            phone: string;
+        };
+    } catch (err: any) {
+        err = new Error("You are not authenticated user.");
+        err.status = 401;
+        err.code = "Token_Unauthenticated";
+        return next(err);
+    }
+    const user = await getUserById(decoded.id);
+    checkUserNotExit(user);
+
+    if (user?.phone !== decoded.phone) {
+        const error: any = new Error("You are not authenticated user.");
+        error.status = 401;
+        error.code = "Token_Unauthenticated";
+        return next(error);
+    }
+
+    const userUpdateData = {
+        randonToken: generateToken(),
+    };
+    await updateUser(user.id, userUpdateData);
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+    res.status(200).json({
+        message: "Successfully logout.",
+    });
+};
