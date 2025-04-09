@@ -19,6 +19,7 @@ import {
 } from "../utils/auth";
 import { generateOtp, generateToken } from "../utils/generate";
 import bcrypt from "bcrypt";
+import { constantErrorCode } from "../config/errorCode";
 
 export const register = [
     body("phone", "Invalid Phone Number")
@@ -477,15 +478,18 @@ export const logout = async (
     res: Response,
     next: NextFunction
 ) => {
+    // Get refresh token from cookies
     const refreshToken = req.cookies ? req.cookies.refreshToken : null;
 
+    // Check if refresh token exists
     if (!refreshToken) {
         const error: any = new Error("You are not authenticated user.");
         error.status = 401;
-        error.code = "Token_Unauthenticated";
+        error.code = constantErrorCode.unauthenticated;
         return next(error);
     }
 
+    // Verify and decode the refresh token
     let decoded;
     try {
         decoded = jwt.verify(
@@ -496,27 +500,46 @@ export const logout = async (
             phone: string;
         };
     } catch (err: any) {
+        // Handle invalid or expired refresh token
         err = new Error("You are not authenticated user.");
         err.status = 401;
-        err.code = "Token_Unauthenticated";
+        err.code = constantErrorCode.unauthenticated;
         return next(err);
     }
+
+    // Check if user exists in database
     const user = await getUserById(decoded.id);
     checkUserNotExit(user);
 
+    // Verify if the phone number in token matches user's phone number
     if (user?.phone !== decoded.phone) {
         const error: any = new Error("You are not authenticated user.");
         error.status = 401;
-        error.code = "Token_Unauthenticated";
+        error.code = constantErrorCode.unauthenticated;
         return next(error);
     }
 
+    // Generate new random token and update user record
     const userUpdateData = {
         randonToken: generateToken(),
     };
     await updateUser(user.id, userUpdateData);
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
+
+    // Clear access token cookie
+    res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    });
+
+    // Clear refresh token cookie
+    res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    });
+
+    // Send success response
     res.status(200).json({
         message: "Successfully logout.",
     });
