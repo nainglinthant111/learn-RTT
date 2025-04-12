@@ -20,6 +20,7 @@ import {
 import { generateOtp, generateToken } from "../utils/generate";
 import bcrypt from "bcrypt";
 import { constantErrorCode } from "../config/errorCode";
+import { sendOTP } from "../services/emailService";
 
 export const register = [
     body("phone", "Invalid Phone Number")
@@ -32,7 +33,7 @@ export const register = [
         if (errors.length > 0) {
             const error: any = new Error(errors[0].msg);
             error.status = 400;
-            error.code = "ERROR_INVALID";
+            error.code = constantErrorCode.invalid;
             return next(error);
         }
         let phone = req.body.phone;
@@ -48,8 +49,8 @@ export const register = [
         //is sms otp can not be sent,response error
         //save otb to db
 
-        // const otp = generateOtp();
-        const otp = 123456; //for dev
+        const otp = generateOtp();
+        // const otp = 123456; //for dev
         const salt = await bcrypt.genSalt(10);
         const hashOpt = await bcrypt.hash(otp.toString(), salt);
         const token = generateToken();
@@ -86,7 +87,7 @@ export const register = [
                         "Otp is allow to request 3 times per day. Please try again after 24 hours"
                     );
                     error.status = 405;
-                    error.code = "ERROR_OVERLIMIT";
+                    error.code = constantErrorCode.overLimit;
                     return next(error);
                 } else {
                     const otpData = {
@@ -95,11 +96,12 @@ export const register = [
                         remenverToken: token,
                         count: { increment: 1 },
                     };
+
                     result = await updateOtp(otpRow.id, otpData);
                 }
             }
         }
-
+        // await sendOTP(phone, otp!.toString());
         res.status(200).json({
             message: `We are Sending Otp to 09${result.phone}`,
             phone: result.phone,
@@ -129,7 +131,7 @@ export const verifyOtp = [
         if (errors.length > 0) {
             const error: any = new Error(errors[0].msg);
             error.status = 400;
-            error.code = "ERROR_INVALID";
+            error.code = constantErrorCode.invalid;
             return next(error);
         }
 
@@ -158,7 +160,7 @@ export const verifyOtp = [
             await updateOtp(otpRow!.id, otpData);
             const error: any = new Error("Token has worng");
             error.status = 400;
-            error.code = "Token_INVALID";
+            error.code = constantErrorCode.attack;
             return next(error);
         }
 
@@ -167,7 +169,7 @@ export const verifyOtp = [
         if (isExpired) {
             const error: any = new Error("Token has Expired");
             error.status = 400;
-            error.code = "Token_Expired";
+            error.code = constantErrorCode.otpExpired;
             return next(error);
         }
 
@@ -190,7 +192,7 @@ export const verifyOtp = [
             }
             const error: any = new Error("Otp is incorrect");
             error.status = 400;
-            error.code = "Token_invalid";
+            error.code = constantErrorCode.invalid;
             return next(error);
         }
 
@@ -234,7 +236,7 @@ export const confirmPassword = [
         if (errors.length > 0) {
             const error: any = new Error(errors[0].msg);
             error.status = 400;
-            error.code = "ERROR_INVALID";
+            error.code = constantErrorCode.invalid;
             return next(error);
         }
 
@@ -253,7 +255,7 @@ export const confirmPassword = [
         if (otpRow?.error === 5) {
             const error: any = new Error(" This Request maybe attacked");
             error.status = 400;
-            error.code = "Error_Invalid";
+            error.code = constantErrorCode.attack;
             return next(error);
         }
 
@@ -265,7 +267,7 @@ export const confirmPassword = [
             await updateOtp(otpRow!.id, otpData);
             const error: any = new Error("Invalid Otp");
             error.status = 400;
-            error.code = "Error_Invalid";
+            error.code = constantErrorCode.attack;
             return next(error);
         }
 
@@ -274,7 +276,7 @@ export const confirmPassword = [
         if (isExpired) {
             const error: any = new Error("Your Request is Expired");
             error.status = 403;
-            error.code = "Error_Expired";
+            error.code = constantErrorCode.requestExpired;
             return next(error);
         }
 
@@ -360,7 +362,7 @@ export const login = [
         if (errors.length > 0) {
             const error: any = new Error(errors[0].msg);
             error.status = 400;
-            error.code = "ERROR_INVALID";
+            error.code = constantErrorCode.invalid;
             return next(error);
         }
 
@@ -381,7 +383,7 @@ export const login = [
                 "Your Account is temporarily locked. Please contact us."
             );
             error.status = 401;
-            error.code = "ERROR_FREEZED";
+            error.code = constantErrorCode.accountFreeze;
             return next(error);
         }
 
@@ -420,7 +422,7 @@ export const login = [
             }
             const error: any = new Error("Password is worng.");
             error.status = 401;
-            error.code = "ERROR_INVALID";
+            error.code = constantErrorCode.invalid;
             return next(error);
         }
 
@@ -499,6 +501,12 @@ export const logout = async (
             id: number;
             phone: string;
         };
+        if (isNaN(decoded.id)) {
+            const error: any = new Error("You are not authenticated user.");
+            error.status = 401;
+            error.code = constantErrorCode.unauthenticated;
+            return next(error);
+        }
     } catch (err: any) {
         // Handle invalid or expired refresh token
         err = new Error("You are not authenticated user.");

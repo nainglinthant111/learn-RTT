@@ -1,7 +1,10 @@
 import { NextFunction, Request, Response } from "express";
+import { constantErrorCode } from "../../config/errorCode";
+import { User } from "@prisma/client";
+import { checkUserNotExit } from "../../utils/auth";
 
 interface CustomRequest extends Request {
-    userId?: number;
+    user?: User;
 }
 
 export const getAllUser = (
@@ -9,9 +12,10 @@ export const getAllUser = (
     res: Response,
     next: NextFunction
 ) => {
-    const id = req.userId;
+    const user = req.user;
+    checkUserNotExit(user);
     res.status(200).json({
-        message: "Request is Ok!",
-        currentUserId: id,
+        message: req.t("welcome"),
+        currentUserId: user!.id,
     });
 };
