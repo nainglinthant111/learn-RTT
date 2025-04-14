@@ -1,6 +1,9 @@
 import { NextFunction, Request, response, Response } from "express";
 import { body, query, validationResult } from "express-validator";
 import { constantErrorCode } from "../../config/errorCode";
+import { getUserById } from "../../services/authService";
+import { authorise } from "../../utils/authorise";
+import { checkUserNotExit } from "../../utils/auth";
 interface CustomRequest extends Request {
     userId?: number;
 }
@@ -25,3 +28,24 @@ export const changeLanguage = [
         });
     },
 ];
+
+export const testPermission = async (
+    req: CustomRequest,
+    res: Response,
+    next: NextFunction
+) => {
+    const userId = req.userId;
+    const user = await getUserById(userId!);
+    checkUserNotExit(user);
+    const can = authorise(true, user!.role, "AUTHOR");
+    const info: any = {
+        title: "test",
+    };
+    if (can) {
+        info.content = "testcontent";
+    }
+    res.status(200).json({
+        user,
+        info,
+    });
+};
