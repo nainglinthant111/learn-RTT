@@ -8,14 +8,15 @@ import i18next from "i18next";
 import backend from "i18next-fs-backend";
 import middleware from "i18next-http-middleware";
 import path from "path";
+import routes from "./routes/v1";
+import corn from "node-cron";
 
 import { limiter } from "./middlewares/rateLimiter";
-import { authCheck } from "./middlewares/auth";
-import healthRoute from "./routes/v1/health";
-import authRoute from "./routes/v1/auth";
-import adminRoute from "./routes/v1/admin/user";
-import userRoute from "./routes/v1/api/user";
-import { authorise } from "./middlewares/authorise";
+import { json } from "stream/consumers";
+import {
+    createOrUpdateSetting,
+    getSettingStatus,
+} from "./services/settingService";
 
 export const app = express();
 const whitelist = ["http://example1.com", "http://localhost:5173"];
@@ -41,8 +42,7 @@ app.use(morgan("dev")) // morgan use log for req,res time
     .use(cors(corsOptions)) // for cross origin resource sharing
     .use(helmet()) // for security
     .use(compression()) //decrease response size
-    .use(limiter)
-    .use("/api/v1", healthRoute);
+    .use(limiter);
 i18next
     .use(backend)
     .use(middleware.LanguageDetector)
@@ -66,14 +66,25 @@ i18next
         load: "languageOnly",
     });
 app.use(middleware.handle(i18next));
-
-app.use("/api/v1", authRoute);
-app.use("/api/v1/admins", authCheck, authorise(true, "ADMIN"), adminRoute);
-app.use("/api/v1", userRoute);
-
+app.use(routes);
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {
     const status = error.status || 500;
     const message = error.message || "Server Error ";
     const errorCode = error.code || "Error_Code";
     res.status(status).json({ message: message, error: errorCode });
 });
+
+// 0 - At minute 0
+// 1 - At 1 AM
+// * - Every day of the month
+// * - Every month
+// * - Every day of the week
+//corn run every day of 1:00 AM
+corn.schedule("0 1 * * *", async () => {
+    const setting = await getSettingStatus("maintenance");
+    if (setting?.value === "true") {
+        await createOrUpdateSetting("maintenance", "false");
+        console.log("Maintenance mode is off");
+    }
+});
+// heaving use beee js

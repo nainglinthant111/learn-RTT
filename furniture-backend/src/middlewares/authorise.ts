@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { getUserById } from "../services/authService";
 import { checkUserNotExit } from "../utils/auth";
 import { constantErrorCode } from "../config/errorCode";
+import { create } from "domain";
+import { createError } from "../utils/error";
 
 interface CustomRequeat extends Request {
     userId?: number;
@@ -15,16 +17,22 @@ export const authorise = (permission: boolean, ...roles: string[]) => {
         checkUserNotExit(user);
         const result = roles.includes(user!.role);
         if (permission && !result) {
-            const error: any = new Error("This connection is not allow");
-            error.status = 401;
-            error.code = constantErrorCode.unauthenticated;
-            return next(error);
+            return next(
+                createError(
+                    "This connection is not allow",
+                    403,
+                    constantErrorCode.unauthenticated
+                )
+            );
         }
         if (!permission && result) {
-            const error: any = new Error("This connection is not allow");
-            error.status = 401;
-            error.code = constantErrorCode.unauthenticated;
-            return next(error);
+            return next(
+                createError(
+                    "This connection is not allow",
+                    403,
+                    constantErrorCode.unauthenticated
+                )
+            );
         }
         req.user = user;
         next();

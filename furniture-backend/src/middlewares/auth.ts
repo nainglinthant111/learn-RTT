@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { constantErrorCode } from "../config/errorCode";
 import { getUserById, updateUser } from "../services/authService";
+import { createError } from "../utils/error";
 
 // Extend Request interface to include userId
 interface CustomRequeat extends Request {
@@ -20,10 +21,13 @@ export const authCheck = (
     // Check if refresh token exists
     if (!refreshToken) {
         // If no refresh token is present, user is not authenticated
-        const error: any = new Error("You are not authenticated user.");
-        error.status = 401;
-        error.code = constantErrorCode.unauthenticated;
-        return next(error);
+        return next(
+            createError(
+                "You are not authenticated user.",
+                401,
+                constantErrorCode.unauthenticated
+            )
+        );
     }
 
     const generateNewToken = async () => {
@@ -40,38 +44,50 @@ export const authCheck = (
         } catch (error: any) {
             // Handle invalid refresh token (tampered or expired)
             error = "You are not authenticated user.";
-            error.status = 401;
-            error.code = constantErrorCode.unauthenticated;
-            return next(error);
+            return next(
+                createError(error, 401, constantErrorCode.unauthenticated)
+            );
         }
         // Validate that the decoded ID is a valid number
         if (isNaN(decodeRefreshToken.id)) {
-            const error: any = new Error("You are not authenticated user.");
-            error.status = 401;
-            error.code = constantErrorCode.unauthenticated;
-            return next(error);
+            return next(
+                createError(
+                    "You are not authenticated user.",
+                    401,
+                    constantErrorCode.unauthenticated
+                )
+            );
         }
         // Check if user exists in database
         const user = await getUserById(refreshToken.id);
         if (!user) {
-            const error: any = new Error("You are not authenticated user.");
-            error.status = 401;
-            error.code = constantErrorCode.unauthenticated;
-            return next(error);
+            return next(
+                createError(
+                    "You are not authenticated user.",
+                    401,
+                    constantErrorCode.unauthenticated
+                )
+            );
         }
         // Verify that the phone number in token matches user's phone
         if (user!.phone !== decodeRefreshToken.phone) {
-            const error: any = new Error("You are not authenticated user.");
-            error.status = 401;
-            error.code = constantErrorCode.unauthenticated;
-            return next(error);
+            return next(
+                createError(
+                    "You are not authenticated user.",
+                    401,
+                    constantErrorCode.unauthenticated
+                )
+            );
         }
         // Verify that the refresh token matches the one stored in user's record
         if (user.randonToken !== refreshToken!) {
-            const error: any = new Error("You are not authenticated user.");
-            error.status = 401;
-            error.code = constantErrorCode.unauthenticated;
-            return next(error);
+            return next(
+                createError(
+                    "You are not authenticated user.",
+                    401,
+                    constantErrorCode.unauthenticated
+                )
+            );
         }
         // Generate JWT tokens for successful login
         const accessPayload = {
@@ -91,7 +107,7 @@ export const authCheck = (
         const newRefreshToken = jwt.sign(
             refleshPayload,
             process.env.REFRESH_TOKEN_SECRET!,
-            { expiresIn: 60 * 15 } // 15 minutes
+            { expiresIn: 1000 * 60 * 60 * 24 * 30 } // 30d
         );
 
         // Reset error count and update refresh token
@@ -134,7 +150,13 @@ export const authCheck = (
                 const error: any = new Error("You are not authenticated user.");
                 error.status = 401;
                 error.code = constantErrorCode.unauthenticated;
-                return next(error);
+                return next(
+                    createError(
+                        "You are not authenticated user.",
+                        401,
+                        constantErrorCode.unauthenticated
+                    )
+                );
             }
             // Add user ID to request object for use in subsequent middleware/routes
             req.userId = decoded.id;
@@ -146,10 +168,13 @@ export const authCheck = (
                 generateNewToken();
             } else {
                 // Handle invalid token error (potential attack)
-                err.message = "Access token is invalid.";
-                err.status = 401;
-                err.code = constantErrorCode.attack;
-                return next(err);
+                return next(
+                    createError(
+                        "Access token is invalid.",
+                        401,
+                        constantErrorCode.attack
+                    )
+                );
             }
         }
     }

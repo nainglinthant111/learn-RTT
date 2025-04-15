@@ -312,7 +312,7 @@ export const confirmPassword = [
         const refreshToken = jwt.sign(
             refleshPayload,
             process.env.REFRESH_TOKEN_SECRET!,
-            { expiresIn: 60 * 15 } // 15 minutes
+            { expiresIn: 1000 * 60 * 60 * 24 * 30 } // 30 days
         );
 
         // Update user with refresh token
@@ -798,7 +798,7 @@ export const resetPassword = [
         const refreshToken = jwt.sign(
             refleshPayload,
             process.env.REFRESH_TOKEN_SECRET!,
-            { expiresIn: 60 * 15 } // 15 minutes
+            { expiresIn: 1000 * 60 * 60 * 24 * 30 } // 30 days
         );
 
         // Update user with refresh token

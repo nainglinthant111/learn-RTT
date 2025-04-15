@@ -9,4 +9,5 @@ export const constantErrorCode = {
     requestExpired: "ERROR_REQUEST_EXPIRED",
     accountFreeze: "ERROR_ACCOUNT_FREEZE",
     unAuthorized: "ERROR_UNAUTHORIZED",
+    maintenance: "ERROR_MAINTENANCE",
 };
