@@ -17,6 +17,8 @@ import {
 import { unlink } from "node:fs/promises";
 import Path from "node:path";
 import { get } from "node:http";
+import { cache } from "sharp";
+import cacheQueue from "../../jobs/queues/cacheQueue";
 
 interface CustomRequest extends Request {
     userId?: number;
@@ -112,6 +114,7 @@ export const createPost = [
             tags,
         };
         const post = await createOnePost(data);
+        await cacheQueue.add("cache-invalidation", { pattern: "post:*" });
         res.status(201).json({
             message: `create post is successfully`,
             postId: post.id,
@@ -219,6 +222,7 @@ export const updatePost = [
             await removeBy(post.image, optimizeFile);
         }
         const postUpdated = await updatePostById(+postId, data);
+        await cacheQueue.add("cache-invalidation", { pattern: "post:*" });
         res.status(200).json({
             message: `Update post is successfully`,
             postId: postUpdated.id,
@@ -252,6 +256,7 @@ export const deletePost = [
         const postDeleted = await deletePostById(post!.id);
         const optimizeFile = post!.image.split(".")[0] + ".webp";
         await removeBy(post!.image, optimizeFile);
+        await cacheQueue.add("cache-invalidation", { pattern: "post:*" });
         res.status(200).json({
             message: `Delete post is successfully`,
             postId: post!.id,

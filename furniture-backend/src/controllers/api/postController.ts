@@ -9,8 +9,11 @@ import {
     getPostsList,
     getPostWithRelations,
 } from "../../services/postServices";
+import { getOrSetpath } from "../../utils/cache";
 import { title } from "process";
 import { skip } from "@prisma/client/runtime/library";
+import { json } from "stream/consumers";
+import cacheQueue from "../../jobs/queues/cacheQueue";
 
 interface CustomRequest extends Request {
     userId?: number;
@@ -18,7 +21,9 @@ interface CustomRequest extends Request {
 export const getPost = [
     param("id", "Post id is required").isInt({ gt: 0 }),
     async (req: CustomRequest, res: Response, next: NextFunction) => {
-        const errors = validationResult(req).array({ onlyFirstError: true });
+        const errors = validationResult(req).array({
+            onlyFirstError: true,
+        });
         if (errors.length > 0) {
             return next(
                 createError(errors[0].msg, 400, constantErrorCode.invalid)
@@ -26,10 +31,32 @@ export const getPost = [
         }
         const postId = req.params.id;
         const userId = req.userId;
-        const user = await getUserById(userId!);
-        checkUserNotExit(user);
-        const post = await getPostWithRelations(+postId);
 
+        if (!userId) {
+            return next(
+                createError(
+                    "User not authenticated",
+                    401,
+                    constantErrorCode.unauthenticated
+                )
+            );
+        }
+
+        const user = await getUserById(userId);
+        checkUserNotExit(user);
+
+        const cacheKey = `post:${postId}:${userId}`;
+        const post = await getOrSetpath(cacheKey, async () => {
+            const postData = await getPostWithRelations(+postId);
+            if (!postData) {
+                throw createError(
+                    "Post not found",
+                    404,
+                    constantErrorCode.invalid
+                );
+            }
+            return postData;
+        });
         res.status(200).json({
             message: "Get Post is ok!",
             post: post,
@@ -53,7 +80,7 @@ export const getPostsByPagination = [
         const page = req.query.page || 1;
         const limit = req.query.limit || 5;
         const userId = req.userId;
-        const user = getUserById(userId!);
+        const user = await getUserById(userId!);
         checkUserNotExit(user);
         const skip = (+page - 1) * +limit;
         const options = {
@@ -75,9 +102,13 @@ export const getPostsByPagination = [
                 updatedAt: "desc",
             },
         };
-        const posts = await getPostsList(options);
+        // const cacheKey = `posts:${json.stringify(req.query)}`;
+        const cacheKey = `posts:${page}-${limit}`;
+        const posts = await getOrSetpath(cacheKey, async () => {
+            return await getPostsList(options);
+        });
         const hasNext = posts.length > +limit;
-        const proviousPage = +page > 1 ? +page - 1 : null;
+        const previousPage = +page > 1 ? +page - 1 : null;
         let nextPage = null;
         if (hasNext) {
             posts.pop();
@@ -86,7 +117,7 @@ export const getPostsByPagination = [
         res.status(200).json({
             message: "Get Posts is ok!",
             currentPage: posts,
-            previousPage: proviousPage,
+            previousPage: previousPage,
             hasNextPage: hasNext,
             nextPage: nextPage,
         });
@@ -109,7 +140,7 @@ export const getInfinitePostsByPagination = [
         const cursor = req.query.cursor;
         const limit = req.query.limit || 5;
         const userId = req.userId;
-        const user = getUserById(userId!);
+        const user = await getUserById(userId!);
         checkUserNotExit(user);
         const options = {
             take: +limit + 1,
@@ -131,7 +162,10 @@ export const getInfinitePostsByPagination = [
                 updatedAt: "asc",
             },
         };
-        const posts = await getPostsList(options);
+        const cacheKey = `posts:${cursor}-${limit}`;
+        const posts = await getOrSetpath(cacheKey, async () => {
+            return await getPostsList(options);
+        });
         const hasNext = posts.length > +limit;
         if (hasNext) {
             posts.pop();
