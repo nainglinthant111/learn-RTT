@@ -65,6 +65,7 @@ i18next
         defaultNS: "translation",
         load: "languageOnly",
     });
+app.use(express.static("uploads/"));
 app.use(middleware.handle(i18next));
 app.use(routes);
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {

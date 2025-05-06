@@ -10,12 +10,9 @@ export const maintenance = async (
 ) => {
     const ip: any = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
     if (whiteList.includes(ip)) {
-        console.log(`Allow Ip : ${ip}`);
         next();
     } else {
         const setting = await getSettingStatus("maintenance");
-        console.log(`Not Allow Ip : ${ip}`);
-        console.log(`Not Allow Ip : ${setting?.value}`);
         if (setting?.value === "true") {
             return next(
                 createError(
